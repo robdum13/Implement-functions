@@ -14,7 +14,6 @@ struct Item {
     std::string Content;
 };
 
-// Function to split a string by a delimiter
 std::vector<std::string> split(const std::string& s, char delimiter) {
     std::vector<std::string> tokens;
     std::string token;
@@ -25,7 +24,6 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
     return tokens;
 }
 
-// Function to read ContentDescriptor.txt and parse its contents
 std::vector<Item> readContentDescriptor(const std::string& filePath) {
     std::vector<Item> items;
     std::ifstream file(filePath);
@@ -42,7 +40,6 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
             continue;
         }
 
-        // Split the line by '|'
         std::vector<std::string> parts = split(line, '|');
 
         if (parts.size() != 5) {
@@ -63,33 +60,48 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
             continue;
         }
 
-        std::cout << "Read item: ParentFolderID: " << item.ParentFolderID << ", ItemID: " << item.ItemID << ", ItemType: " << item.ItemType << ", ItemName: " << item.ItemName << ", Content: " << item.Content << std::endl;
-
         items.push_back(item);
     }
 
     return items;
 }
 
-// Function to display the contents recursively
-void displayContents(const std::vector<Item>& items) {
-    // Implement the recursive display of contents here
-    // For each item, print its details recursively
+void displayContents(const std::vector<Item>& items, int parentFolderID = 0, int depth = 0) {
     for (const auto& item : items) {
-        std::cout << "ParentFolderID: " << item.ParentFolderID << ", ItemID: " << item.ItemID << ", ItemType: " << item.ItemType << ", ItemName: " << item.ItemName << ", Content: " << item.Content << std::endl;
+        if (item.ParentFolderID == parentFolderID) {
+            for (int i = 0; i < depth; ++i) {
+                std::cout << "\t";
+            }
+            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
+            if (item.ItemType == 'D') {
+                displayContents(items, item.ItemID, depth + 1);
+            }
+        }
     }
 }
 
-int _tmain(int argc, _TCHAR* argv[]) {
-    char* filePath;
+void writeFile(const std::string& filePath, const std::string& content) {
+    std::ofstream file(filePath);
+    if (file.is_open()) {
+        file << content;
+        file.close();
+        std::cout << "Content written to file: " << filePath << std::endl;
+    } else {
+        std::cerr << "Error: Unable to open file for writing: " << filePath << std::endl;
+    }
+}
+
+int _tmain(int argc, char* argv[]) {
+    char filePath[MAX_PATH]; // Allocate memory for the file path
 
     // Get the current working directory: 
-    if ((filePath = _getcwd(NULL, 0)) == NULL) {
+    if (_getcwd(filePath, MAX_PATH) == NULL) {
         perror("_getcwd error");
         return (-1);
     }
 
-    char* sampleFileName = "\\ContentDescriptor.txt";
+    // Append the sample file name to the path:
+    char sampleFileName[] = "\\ContentDescriptor.txt";
     strncat(filePath, sampleFileName, strlen(sampleFileName));
 
     printf("Reading file %s \n\n", filePath);
