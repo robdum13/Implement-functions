@@ -14,16 +14,6 @@ struct Item {
     std::string Content;
 };
 
-std::vector<std::string> split(const std::string& s, char delimiter) {
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter)) {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
-
 std::vector<Item> readContentDescriptor(const std::string& filePath) {
     std::vector<Item> items;
     std::ifstream file(filePath);
@@ -40,22 +30,9 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
             continue;
         }
 
-        std::vector<std::string> parts = split(line, '|');
-
-        if (parts.size() != 5) {
-            std::cerr << "Error parsing line: " << line << std::endl;
-            continue;
-        }
-
+        std::istringstream iss(line);
         Item item;
-        try {
-            item.ParentFolderID = std::stoi(parts[0]);
-            item.ItemID = std::stoi(parts[1]);
-            item.ItemType = parts[2][0];
-            item.ItemName = parts[3];
-            item.Content = parts[4];
-        }
-        catch (const std::exception& e) {
+        if (!(iss >> item.ParentFolderID >> item.ItemID >> item.ItemType >> item.ItemName >> item.Content)) {
             std::cerr << "Error parsing line: " << line << std::endl;
             continue;
         }
