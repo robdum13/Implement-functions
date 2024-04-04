@@ -1,0 +1,11 @@
+(D) Folder_1
+(F) Folder_1 -> File_1.txt
+(F) Folder_1 -> File_2.xt
+(D) Folder_1 -> SubFolder_1
+(F) Folder_1 -> SubFolder_1 -> File_1_1.txt
+(F) Folder_1 -> SubFolder_1 -> File_1_2.txt
+(D) Folder_1 -> SubFolder_1 -> SubFolder_1_2
+(F) Folder_1 -> SubFolder_1 -> SubFolder_1_2 -> File_1_2_1.txt
+(F) Folder_1 -> SubFolder_2 -> File_2_1.txt
+(F) Folder_1 -> SubFolder_2 -> File_2_2.txt
+etc.
