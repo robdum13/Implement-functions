@@ -30,10 +30,28 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
             continue;
         }
 
-        std::istringstream iss(line);
         Item item;
-        if (!(iss >> item.ParentFolderID >> item.ItemID >> item.ItemType >> item.ItemName >> item.Content)) {
+
+        // Separate parsing for ItemType, ItemName, and Content
+        if (sscanf(line.c_str(), "%d|%d|%c", &item.ParentFolderID, &item.ItemID, &item.ItemType) != 3) {
             std::cerr << "Error parsing line: " << line << std::endl;
+            continue;
+        }
+
+        if (item.ItemType == 'D') {
+            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]", &item.ItemName[0]) != 1) {
+                std::cerr << "Error parsing line: " << line << std::endl;
+                continue;
+            }
+            // No content for directories
+            item.Content = "";
+        } else if (item.ItemType == 'F') {
+            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]|%[^\n]", &item.ItemName[0], &item.Content[0]) != 2) {
+                std::cerr << "Error parsing line: " << line << std::endl;
+                continue;
+            }
+        } else {
+            std::cerr << "Error: Invalid ItemType: " << item.ItemType << std::endl;
             continue;
         }
 
@@ -46,47 +64,4 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
 void displayContents(const std::vector<Item>& items, int parentFolderID = 0, int depth = 0) {
     for (const auto& item : items) {
         if (item.ParentFolderID == parentFolderID) {
-            for (int i = 0; i < depth; ++i) {
-                std::cout << "\t";
-            }
-            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
-            if (item.ItemType == 'D') {
-                displayContents(items, item.ItemID, depth + 1);
-            }
-        }
-    }
-}
-
-void writeFile(const std::string& filePath, const std::string& content) {
-    std::ofstream file(filePath);
-    if (file.is_open()) {
-        file << content;
-        file.close();
-        std::cout << "Content written to file: " << filePath << std::endl;
-    } else {
-        std::cerr << "Error: Unable to open file for writing: " << filePath << std::endl;
-    }
-}
-
-int _tmain(int argc, char* argv[]) {
-    char filePath[MAX_PATH]; // Allocate memory for the file path
-
-    // Get the current working directory: 
-    if (_getcwd(filePath, MAX_PATH) == NULL) {
-        perror("_getcwd error");
-        return (-1);
-    }
-
-    // Append the sample file name to the path:
-    char sampleFileName[] = "\\ContentDescriptor.txt";
-    strncat(filePath, sampleFileName, strlen(sampleFileName));
-
-    printf("Reading file %s \n\n", filePath);
-
-    std::vector<Item> items = readContentDescriptor(filePath);
-    displayContents(items);
-
-    printf("\nPress any key to continue...");
-    _getch();
-    return 0;
-}
+            for (int i = 0; i < de
