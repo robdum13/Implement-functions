@@ -31,27 +31,8 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
         }
 
         Item item;
-
-        // Separate parsing for ItemType, ItemName, and Content
-        if (sscanf(line.c_str(), "%d|%d|%c", &item.ParentFolderID, &item.ItemID, &item.ItemType) != 3) {
+        if (sscanf(line.c_str(), "%d|%d|%c|%[^|]|%[^\n]", &item.ParentFolderID, &item.ItemID, &item.ItemType, &item.ItemName[0], &item.Content[0]) != 5) {
             std::cerr << "Error parsing line: " << line << std::endl;
-            continue;
-        }
-
-        if (item.ItemType == 'D') {
-            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]", &item.ItemName[0]) != 1) {
-                std::cerr << "Error parsing line: " << line << std::endl;
-                continue;
-            }
-            // No content for directories
-            item.Content = "";
-        } else if (item.ItemType == 'F') {
-            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]|%[^\n]", &item.ItemName[0], &item.Content[0]) != 2) {
-                std::cerr << "Error parsing line: " << line << std::endl;
-                continue;
-            }
-        } else {
-            std::cerr << "Error: Invalid ItemType: " << item.ItemType << std::endl;
             continue;
         }
 
@@ -61,15 +42,17 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
     return items;
 }
 
-void displayContents(const std::vector<Item>& items, int parentFolderID = 0, int depth = 0) {
+void displayContents(const std::vector<Item>& items, int parentFolderID = 0, const std::string& parentFolderName = "Folder_", int depth = 0) {
     for (const auto& item : items) {
         if (item.ParentFolderID == parentFolderID) {
             for (int i = 0; i < depth; ++i) {
                 std::cout << "\t";
             }
-            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
             if (item.ItemType == 'D') {
-                displayContents(items, item.ItemID, depth + 1);
+                std::cout << "(D) " << parentFolderName << item.ItemName << std::endl;
+                displayContents(items, item.ItemID, parentFolderName + item.ItemName + "->", depth + 1);
+            } else {
+                std::cout << "(F) " << parentFolderName << "->" << item.ItemName << std::endl;
             }
         }
     }
