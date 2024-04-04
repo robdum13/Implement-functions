@@ -24,34 +24,23 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
     }
 
     std::string line;
-    std::getline(file, line); // Skip the first line (header)
-    std::getline(file, line); // Skip the second line (Possible item types)
-
     while (std::getline(file, line)) {
         if (line.empty()) continue;
 
         Item item;
         std::stringstream ss(line);
-        std::string parentIdStr, itemIdStr, itemTypeStr, itemName;
-        char pipe;
+        ss >> item.ParentFolderID >> item.ItemID >> item.ItemType;
 
-        ss >> parentIdStr >> pipe >> item.ItemID >> pipe >> itemTypeStr >> itemName;
+        std::string itemName;
+        std::getline(ss, itemName, '|');
+        item.ItemName = itemName.substr(1); // Remove leading space
 
-        if (itemTypeStr == "D") {
-            item.ItemType = 'D';
-            item.ItemName = itemName;
-        } else if (itemTypeStr == "F") {
-            item.ItemType = 'F';
-            item.ItemName = itemName.substr(0, itemName.find_last_of('.'));
-            std::getline(ss, item.Content); // Read the content if ItemType is 'F'
-            item.Content.erase(0, 1); // Remove leading space
-        } else {
-            std::cerr << "Error parsing line: " << line << std::endl;
-            continue;
+        if (item.ItemType == 'F') {
+            std::string content;
+            std::getline(ss, content);
+            item.Content = content.substr(content.find('|') + 1);
         }
 
-        // Convert parentId from string to int
-        std::stringstream(parentIdStr) >> item.ParentFolderID;
         items.push_back(item);
     }
 
@@ -64,7 +53,11 @@ void displayContents(const std::vector<Item>& items, int parentFolderID = 0, int
             for (int i = 0; i < depth; ++i) {
                 std::cout << "\t";
             }
-            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
+            std::cout << "(" << item.ItemType << ") " << item.ItemName;
+            if (item.ItemType == 'F') {
+                std::cout << " -> " << item.Content;
+            }
+            std::cout << std::endl;
             if (item.ItemType == 'D') {
                 displayContents(items, item.ItemID, depth + 1);
             }
