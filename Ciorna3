@@ -1,0 +1,126 @@
+#include "stdafx.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <Windows.h>
+
+struct Item {
+    int ParentFolderID;
+    int ItemID;
+    char ItemType;
+    std::string ItemName;
+    std::string Content;
+};
+
+std::vector<Item> readContentDescriptor(const std::string& filePath) {
+    std::vector<Item> items;
+    std::ifstream file(filePath);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file " << filePath << std::endl;
+        return items;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        // Skip header and empty lines
+        if (line.empty() || line.find("Possible item types:") != std::string::npos) {
+            continue;
+        }
+
+        Item item;
+        if (sscanf(line.c_str(), "%d|%d|%c|%[^|]|%[^\n]", &item.ParentFolderID, &item.ItemID, &item.ItemType, &item.ItemName[0], &item.Content[0]) != 5) {
+            std::cerr << "Error parsing line: " << line << std::endl;
+            continue;
+        }
+
+        items.push_back(item);
+    }
+
+    return items;
+}
+
+void displayContents(const std::vector<Item>& items) {
+    for (const auto& item : items) {
+        if (item.ParentFolderID == 0) {
+            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
+        } else {
+            // Find parent folder name
+            std::string parentName;
+            for (const auto& parentItem : items) {
+                if (parentItem.ItemID == item.ParentFolderID) {
+                    parentName = parentItem.ItemName;
+                    break;
+                }
+            }
+
+            if (!parentName.empty()) {
+                std::cout << "(" << item.ItemType << ") " << parentName << " -> " << item.ItemName << std::endl;
+            }
+        }
+    }
+}
+
+void writeFileContents(const std::string& filePath, const std::string& content) {
+    std::ofstream file(filePath);
+    if (file.is_open()) {
+        file << content;
+        file.close();
+        std::cout << "Content successfully written to file: " << filePath << std::endl;
+    } else {
+        std::cerr << "Unable to open file for writing: " << filePath << std::endl;
+    }
+}
+
+int _tmain(int argc, char* argv[]) {
+    char* filePath;
+
+    // Get the current working directory: 
+    if ((filePath = _getcwd(NULL, 0)) == NULL) {
+        perror("_getcwd error");
+        return (-1);
+    }
+
+    char* sampleFileName = "\\ContentDescriptor.txt";
+    strncat(filePath, sampleFileName, strlen(sampleFileName));
+
+    printf("Reading file %s \n\n", filePath);
+
+    HANDLE hFile = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        printf("Unable to open file \"%s\" for read.\n", filePath);
+        return (-1);
+    }
+
+    DWORD dwNumToRead = GetFileSize(hFile, NULL);
+    DWORD dwNumRead;
+    char* dwBuffer = new char[dwNumToRead];
+
+    if (FALSE == ReadFile(hFile, dwBuffer, dwNumToRead - 1, &dwNumRead, NULL)) {
+        printf("Unable to read from file.\n");
+        CloseHandle(hFile);
+        return (-1);
+    }
+
+    if (dwNumRead > 0 && dwNumRead <= dwNumToRead - 1) {
+        dwBuffer[dwNumRead] = '\0'; // NULL character
+
+        printf("Data from file: \n\n%s\n", dwBuffer);
+    }
+
+    BOOL bResult = CloseHandle(hFile);
+
+    std::vector<Item> items = readContentDescriptor(filePath);
+    displayContents(items);
+
+    // Write file content
+    std::string content = "This is a test content.";
+    writeFileContents("test.txt", content);
+
+    printf("\nPress any key to continue...");
+    _getch();
+    return 0;
+}
