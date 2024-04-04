@@ -64,4 +64,72 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
 void displayContents(const std::vector<Item>& items, int parentFolderID = 0, int depth = 0) {
     for (const auto& item : items) {
         if (item.ParentFolderID == parentFolderID) {
-            for (int i = 0; i < de
+            for (int i = 0; i < depth; ++i) {
+                std::cout << "\t";
+            }
+            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
+            if (item.ItemType == 'D') {
+                displayContents(items, item.ItemID, depth + 1);
+            }
+        }
+    }
+}
+
+void writeFile(const std::string& filePath, const std::string& content) {
+    std::ofstream file(filePath);
+    if (file.is_open()) {
+        file << content;
+        file.close();
+        std::cout << "Content written to file: " << filePath << std::endl;
+    } else {
+        std::cerr << "Error: Unable to open file for writing: " << filePath << std::endl;
+    }
+}
+
+int _tmain(int argc, char* argv[]) {
+    char filePath[MAX_PATH]; // Allocate memory for the file path
+
+    // Get the current working directory: 
+    if (_getcwd(filePath, MAX_PATH) == NULL) {
+        perror("_getcwd error");
+        return (-1);
+    }
+
+    // Append the sample file name to the path:
+    char sampleFileName[] = "\\ContentDescriptor.txt";
+    strncat(filePath, sampleFileName, strlen(sampleFileName));
+
+    printf("Reading file %s \n\n", filePath);
+
+    HANDLE hFile = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        printf("Unable to open file \"%s\" for read.\n", filePath);
+        return (-1);
+    }
+
+    DWORD dwNumToRead = GetFileSize(hFile, NULL);
+    DWORD dwNumRead;
+    char* dwBuffer = new char[dwNumToRead];
+
+    if (FALSE == ReadFile(hFile, dwBuffer, dwNumToRead - 1, &dwNumRead, NULL)) {
+        printf("Unable to read from file.\n");
+        CloseHandle(hFile);
+        return (-1);
+    }
+
+    if (dwNumRead > 0 && dwNumRead <= dwNumToRead - 1) {
+        dwBuffer[dwNumRead] = '\0'; // NULL character
+
+        printf("Data from file: \n\n%s\n", dwBuffer);
+    }
+
+    BOOL bResult = CloseHandle(hFile);
+
+    std::vector<Item> items = readContentDescriptor(filePath);
+    displayContents(items);
+
+    printf("\nPress any key to continue...");
+    _getch();
+    return 0;
+}
