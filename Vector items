@@ -15,28 +15,35 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
         }
 
         Item item;
+        if (line[0] == '-') {
+            continue; // Skip lines starting with '-'
+        }
+        if (line[0] == '0') {
+            continue; // Skip lines with invalid ParentFolderID
+        }
 
-        // Separate parsing for ItemType, ItemName, and Content
-        if (sscanf(line.c_str(), "%d|%d|%c", &item.ParentFolderID, &item.ItemID, &item.ItemType) != 3) {
+        int parentId, itemId;
+        char itemType;
+        char itemName[100], content[100];
+
+        if (sscanf(line.c_str(), "%d %d %c %[^\n]", &parentId, &itemId, &itemType, itemName) != 4) {
             std::cerr << "Error parsing line: " << line << std::endl;
             continue;
         }
 
-        if (item.ItemType == 'D') {
-            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]", &item.ItemName[0]) != 1) {
+        if (itemType == 'F') {
+            if (sscanf(line.c_str(), "%*d %*d %*c %*[^|]|%[^\n]", content) != 1) {
                 std::cerr << "Error parsing line: " << line << std::endl;
                 continue;
             }
-            // No content for directories
-            item.Content = "";
-        } else if (item.ItemType == 'F') {
-            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]|%[^\n]", &item.ItemName[0], &item.Content[0]) != 2) {
-                std::cerr << "Error parsing line: " << line << std::endl;
-                continue;
-            }
-        } else {
-            std::cerr << "Error: Invalid ItemType: " << item.ItemType << std::endl;
-            continue;
+        }
+
+        item.ParentFolderID = parentId;
+        item.ItemID = itemId;
+        item.ItemType = itemType;
+        item.ItemName = itemName;
+        if (itemType == 'F') {
+            item.Content = content;
         }
 
         items.push_back(item);
