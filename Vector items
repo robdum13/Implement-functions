@@ -1,0 +1,46 @@
+std::vector<Item> readContentDescriptor(const std::string& filePath) {
+    std::vector<Item> items;
+    std::ifstream file(filePath);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file " << filePath << std::endl;
+        return items;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        // Skip header and empty lines
+        if (line.empty() || line.find("Possible item types:") != std::string::npos) {
+            continue;
+        }
+
+        Item item;
+
+        // Separate parsing for ItemType, ItemName, and Content
+        if (sscanf(line.c_str(), "%d|%d|%c", &item.ParentFolderID, &item.ItemID, &item.ItemType) != 3) {
+            std::cerr << "Error parsing line: " << line << std::endl;
+            continue;
+        }
+
+        if (item.ItemType == 'D') {
+            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]", &item.ItemName[0]) != 1) {
+                std::cerr << "Error parsing line: " << line << std::endl;
+                continue;
+            }
+            // No content for directories
+            item.Content = "";
+        } else if (item.ItemType == 'F') {
+            if (sscanf(line.c_str(), "%*d|%*d|%*c|%[^|]|%[^\n]", &item.ItemName[0], &item.Content[0]) != 2) {
+                std::cerr << "Error parsing line: " << line << std::endl;
+                continue;
+            }
+        } else {
+            std::cerr << "Error: Invalid ItemType: " << item.ItemType << std::endl;
+            continue;
+        }
+
+        items.push_back(item);
+    }
+
+    return items;
+}
