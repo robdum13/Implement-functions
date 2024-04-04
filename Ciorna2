@@ -30,57 +30,12 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
         }
 
         Item item;
-        item.ItemName = ""; // Initialize ItemName
-        item.Content = "";  // Initialize Content
+        std::stringstream ss(line);
+        std::string temp;
 
-        if (sscanf(line.c_str(), "%d|%d|%c|%[^|]|%[^\n]", &item.ParentFolderID, &item.ItemID, &item.ItemType, &item.ItemName[0], &item.Content[0]) != 5) {
-            std::cerr << "Error parsing line: " << line << std::endl;
-            continue;
-        }
+        // Read each field from the line
+        std::getline(ss, temp, '|');
+        item.ParentFolderID = std::stoi(temp);
 
-        items.push_back(item);
-    }
-
-    file.close();
-    return items;
-}
-
-bool writeFileContent(const std::string& filePath, const std::string& content) {
-    std::ofstream file(filePath);
-
-    if (!file.is_open()) {
-        std::cerr << "Error: Unable to open file " << filePath << " for write" << std::endl;
-        return false;
-    }
-
-    file << content;
-    file.close();
-    return true;
-}
-
-int _tmain(int argc, char* argv[]) {
-    char* filePath;
-
-    // Get the current working directory: 
-    if ((filePath = _getcwd(NULL, 0)) == NULL) {
-        perror("_getcwd error");
-        return (-1);
-    }
-
-    char* sampleFileName = "\\ContentDescriptor.txt";
-    strncat(filePath, sampleFileName, strlen(sampleFileName));
-
-    std::vector<Item> items = readContentDescriptor(filePath);
-
-    // Display contents
-    std::cout << "Contents of ContentDescriptor.txt:" << std::endl;
-    for (const auto& item : items) {
-        if (item.ItemType == 'D') {
-            std::cout << "(D) " << item.ItemName << std::endl;
-        } else if (item.ItemType == 'F') {
-            std::cout << "(F) " << item.ParentFolderID << " -> " << item.ItemName << std::endl;
-        }
-    }
-
-    return 0;
-}
+        std::getline(ss, temp, '|');
+       
