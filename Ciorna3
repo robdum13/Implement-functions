@@ -36,6 +36,8 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
             continue;
         }
 
+        std::cout << "Read item: ParentFolderID: " << item.ParentFolderID << ", ItemID: " << item.ItemID << ", ItemType: " << item.ItemType << ", ItemName: " << item.ItemName << ", Content: " << item.Content << std::endl;
+
         items.push_back(item);
     }
     return items;
@@ -44,6 +46,9 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
 void displayContents(const std::vector<Item>& items) {
     // Implement the recursive display of contents here
     // For each item, print its details recursively
+    for (const auto& item : items) {
+        std::cout << "ParentFolderID: " << item.ParentFolderID << ", ItemID: " << item.ItemID << ", ItemType: " << item.ItemType << ", ItemName: " << item.ItemName << ", Content: " << item.Content << std::endl;
+    }
 }
 
 int _tmain(int argc, _TCHAR* argv[]) {
