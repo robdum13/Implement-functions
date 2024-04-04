@@ -25,22 +25,21 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
 
     std::string line;
     while (std::getline(file, line)) {
-        if (line.empty()) continue;
-
-        Item item;
-        std::stringstream ss(line);
-        ss >> item.ParentFolderID >> item.ItemID >> item.ItemType;
-
-        std::string itemName;
-        std::getline(ss, itemName, '|');
-        item.ItemName = itemName.substr(1); // Remove leading space
-
-        if (item.ItemType == 'F') {
-            std::string content;
-            std::getline(ss, content);
-            item.Content = content.substr(content.find('|') + 1);
+        // Skip header and empty lines
+        if (line.empty() || line.find("Possible item types:") != std::string::npos) {
+            continue;
         }
 
+        Item item;
+        char ItemType; // Change ItemType to char to match the format
+        char Content[256]; // Assuming a maximum content length of 256 characters
+        if (sscanf(line.c_str(), "%d|%d|%c|%[^|]|%[^\n]", &item.ParentFolderID, &item.ItemID, &ItemType, &item.ItemName[0], &Content[0]) != 5) {
+            std::cerr << "Error parsing line: " << line << std::endl;
+            continue;
+        }
+
+        item.ItemType = ItemType; // Assign ItemType to the item structure
+        item.Content = Content; // Assign Content to the item structure
         items.push_back(item);
     }
 
@@ -53,11 +52,7 @@ void displayContents(const std::vector<Item>& items, int parentFolderID = 0, int
             for (int i = 0; i < depth; ++i) {
                 std::cout << "\t";
             }
-            std::cout << "(" << item.ItemType << ") " << item.ItemName;
-            if (item.ItemType == 'F') {
-                std::cout << " -> " << item.Content;
-            }
-            std::cout << std::endl;
+            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
             if (item.ItemType == 'D') {
                 displayContents(items, item.ItemID, depth + 1);
             }
@@ -76,7 +71,7 @@ void writeFile(const std::string& filePath, const std::string& content) {
     }
 }
 
-int _tmain(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     char filePath[MAX_PATH]; // Allocate memory for the file path
 
     // Get the current working directory: 
