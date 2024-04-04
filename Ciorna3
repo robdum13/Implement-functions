@@ -38,43 +38,15 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
 
         items.push_back(item);
     }
-
     return items;
 }
 
 void displayContents(const std::vector<Item>& items) {
-    for (const auto& item : items) {
-        if (item.ParentFolderID == 0) {
-            std::cout << "(" << item.ItemType << ") " << item.ItemName << std::endl;
-        } else {
-            // Find parent folder name
-            std::string parentName;
-            for (const auto& parentItem : items) {
-                if (parentItem.ItemID == item.ParentFolderID) {
-                    parentName = parentItem.ItemName;
-                    break;
-                }
-            }
-
-            if (!parentName.empty()) {
-                std::cout << "(" << item.ItemType << ") " << parentName << " -> " << item.ItemName << std::endl;
-            }
-        }
-    }
+    // Implement the recursive display of contents here
+    // For each item, print its details recursively
 }
 
-void writeFileContents(const std::string& filePath, const std::string& content) {
-    std::ofstream file(filePath);
-    if (file.is_open()) {
-        file << content;
-        file.close();
-        std::cout << "Content successfully written to file: " << filePath << std::endl;
-    } else {
-        std::cerr << "Unable to open file for writing: " << filePath << std::endl;
-    }
-}
-
-int _tmain(int argc, char* argv[]) {
+int _tmain(int argc, _TCHAR* argv[]) {
     char* filePath;
 
     // Get the current working directory: 
@@ -105,20 +77,19 @@ int _tmain(int argc, char* argv[]) {
         return (-1);
     }
 
-    if (dwNumRead > 0 && dwNumRead <= dwNumToRead - 1) {
-        dwBuffer[dwNumRead] = '\0'; // NULL character
+    // Null-terminate the buffer
+    dwBuffer[dwNumRead] = '\0';
 
+    // Print the data
+    if (dwNumRead > 0) {
         printf("Data from file: \n\n%s\n", dwBuffer);
     }
 
     BOOL bResult = CloseHandle(hFile);
+    delete[] dwBuffer; // Free memory
 
     std::vector<Item> items = readContentDescriptor(filePath);
     displayContents(items);
-
-    // Write file content
-    std::string content = "This is a test content.";
-    writeFileContents("test.txt", content);
 
     printf("\nPress any key to continue...");
     _getch();
