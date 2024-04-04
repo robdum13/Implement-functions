@@ -8,44 +8,34 @@ std::vector<Item> readContentDescriptor(const std::string& filePath) {
     }
 
     std::string line;
+    std::getline(file, line); // Skip the first line (header)
+    std::getline(file, line); // Skip the second line (Possible item types)
+
     while (std::getline(file, line)) {
-        // Skip header and empty lines
-        if (line.empty() || line.find("Possible item types:") != std::string::npos) {
-            continue;
-        }
+        if (line.empty()) continue;
 
         Item item;
-        if (line[0] == '-') {
-            continue; // Skip lines starting with '-'
-        }
-        if (line[0] == '0') {
-            continue; // Skip lines with invalid ParentFolderID
-        }
+        std::stringstream ss(line);
+        std::string parentIdStr, itemIdStr, itemTypeStr, itemName;
+        char pipe;
 
-        int parentId, itemId;
-        char itemType;
-        char itemName[100], content[100];
+        ss >> parentIdStr >> pipe >> item.ItemID >> pipe >> itemTypeStr >> itemName;
 
-        if (sscanf(line.c_str(), "%d %d %c %[^\n]", &parentId, &itemId, &itemType, itemName) != 4) {
+        if (itemTypeStr == "D") {
+            item.ItemType = 'D';
+            item.ItemName = itemName;
+        } else if (itemTypeStr == "F") {
+            item.ItemType = 'F';
+            item.ItemName = itemName.substr(0, itemName.find_last_of('.'));
+            std::getline(ss, item.Content); // Read the content if ItemType is 'F'
+            item.Content.erase(0, 1); // Remove leading space
+        } else {
             std::cerr << "Error parsing line: " << line << std::endl;
             continue;
         }
 
-        if (itemType == 'F') {
-            if (sscanf(line.c_str(), "%*d %*d %*c %*[^|]|%[^\n]", content) != 1) {
-                std::cerr << "Error parsing line: " << line << std::endl;
-                continue;
-            }
-        }
-
-        item.ParentFolderID = parentId;
-        item.ItemID = itemId;
-        item.ItemType = itemType;
-        item.ItemName = itemName;
-        if (itemType == 'F') {
-            item.Content = content;
-        }
-
+        // Convert parentId from string to int
+        std::stringstream(parentIdStr) >> item.ParentFolderID;
         items.push_back(item);
     }
 
