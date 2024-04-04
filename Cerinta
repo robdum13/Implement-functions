@@ -1,0 +1,29 @@
+Description
+The application is designed for restoring content (structure folders, file contents etc.), starting from a predefined structure. The structure is described in the Structure.txt file (which can also be used as a sample for testing the application, as you advance on the requirements detailed below).
+The ContentDescriptor.txt structure is as follows:
+·	Each line represents a folder or file that needs to be created on the HDD - the information related to an item is separated by |
+·	A line is described as follows: ParentFolderID|ItemID|ItemType|ItemName|Content_of_file_if_ItemType_is_F
+·	ParentFolderID represents an ItemID of type Directory. The items that you are about to create for a specific line, have to be children of this ParentFolder. The ParentFolderID always represent ItemIDs for Directory items
+1.	If ParentFolderID is 0, this means that it has no other parent, it will be created in the root folder
+·	ItemID - a unique ID in the ContentDescriptor.txt file that can be used internally (in the program), to identify a Directory or File
+·	ItemType - it can be either D (Directory) or F (File)
+·	ItemName - either a folder name (if ItemType is D) or a file name (if ItemType is F)
+·	Content_of_file_if_ItemType_is_F - if the ItemType is F, the content will be written in the file that you've just created
+
+1. Create a function that receives a file path (the file path for ContentDescriptor.txt) and that reads the entire file in memory (in a struct/class/etc. - you decide the best storage solution). Also write a function that receives the storage structure and displays its contents recursively, as follows:
+(D) Folder_1
+(F) Folder_1 -> File_1.txt
+(F) Folder_1 -> File_2.xt
+(D) Folder_1 -> SubFolder_1
+(F) Folder_1 -> SubFolder_1 -> File_1_1.txt
+(F) Folder_1 -> SubFolder_1 -> File_1_2.txt
+(D) Folder_1 -> SubFolder_1 -> SubFolder_1_2
+(F) Folder_1 -> SubFolder_1 -> SubFolder_1_2 -> File_1_2_1.txt
+(F) Folder_1 -> SubFolder_2 -> File_2_1.txt
+(F) Folder_1 -> SubFolder_2 -> File_2_2.txt
+etc.
+
+2. Create a function for writing the contents of a file on disk (it should receive the path to the file, and the string content that needs to be written in the file)
+
+3. Create a function that receives as parameter the storage structure, and that creates the required directories, writes the required files and their contents on disk
+
